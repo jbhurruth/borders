@@ -225,7 +225,7 @@
             // }, {})
         })
 
-        request("http://cors-anywhere.herokuapp.com/https://yahadmap.org/en/", function (data) {
+        request("https://cors-anywhere.herokuapp.com/https://yahadmap.org/en/", function (data) {
             JSON.parse(data).forEach(function (element) {
                 if (element.lat && element.lng) {
                     L.marker([element.lat, element.lng], {
