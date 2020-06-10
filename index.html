@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+        crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    </link>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    </link>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/papaparse@5.2.0/papaparse.min.js"></script>
+</head>
+
+<body>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #mapid {
+            height: 90vh;
+        }
+
+        .slide-container {
+            width: 100%;
+        }
+
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none;
+            /* Override default CSS styles */
+            appearance: none;
+            width: 100%;
+            /* Full-width */
+            height: 25px;
+            /* Specified height */
+            background: #d3d3d3;
+            /* Grey background */
+            outline: none;
+            /* Remove outline */
+            opacity: 0.7;
+            /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s;
+            /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 1;
+            /* Fully shown on mouse-over */
+        }
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            /* Override default look */
+            appearance: none;
+            width: 25px;
+            /* Set a specific slider handle width */
+            height: 25px;
+            /* Slider handle height */
+            background: #4CAF50;
+            /* Green background */
+            cursor: pointer;
+            /* Cursor on hover */
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            /* Set a specific slider handle width */
+            height: 25px;
+            /* Slider handle height */
+            background: #4CAF50;
+            /* Green background */
+            cursor: pointer;
+            /* Cursor on hover */
+        }
+
+        .yahad-icon {
+            background-color: rebeccapurple;
+            /* padding: 0.1em; */
+            border-radius: 1em;
+            border: 1px solid black;
+        }
+
+        .site-icon {
+            background-color: greenyellow;
+            /* padding: 0.1em; */
+            border-radius: 1em;
+            border: 1px solid black;
+        }
+    </style>
+
+    <div id="mapid"></div>
+
+    <div class="slide-container">
+        <input type="range" min="1940" max="2020" value="2020" class="slider" id="year-range">
+    </div>
+
+    <script type="module">
+        import { html, render } from 'https://unpkg.com/lit-html?module';
+
+        function request(url, callback, data) {
+            var request = new XMLHttpRequest();
+            request.open(data ? "POST" : "GET", url, true);
+
+            if (data) {
+                request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+            }
+
+            request.onload = function () {
+                if (this.status >= 200 && this.status < 400) {
+                    callback(this.response);
+                } else {
+                    console.error(this.response);
+                }
+            };
+            request.onerror = console.error;
+            request.send(data);
+        }
+
+        function format(obj, node) {
+            return render(html`
+                <table>
+                    ${Object.keys(obj).filter(e => e[0] !== "_").map(e => html`
+                        <tr>
+                            <td>${e}</td>
+                            <td>${obj[e]}</td>
+                        </tr>
+                        `)}
+                </table>
+            `, node)
+        }
+
+        function asyncForEach(array, func, callback) {
+            array.reduceRight(function (next, elem) {
+                return func.bind(this, elem, next)
+            }, callback || function () { })()
+        }
+
+        function sortingBy(key) {
+            return function (a, b) {
+                return a[key] - b[key]
+            }
+        }
+
+        var map = L.map('mapid').setView([51, 21], 5);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox/dark-v10',
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 5,
+            maxZoom: 10,
+            accessToken: 'pk.eyJ1IjoibGV3YTE1MCIsImEiOiJja2F4b3A5bXQwODh6MnlvNWh1NndqZGpxIn0.ZjXRzN_TEwYa4c2Ixf6t5g'
+        }).addTo(map);
+
+        request("germany_1942.geojson", function (data) {
+            L.geoJSON(JSON.parse(data), {
+                style: function (feature) {
+                    return {
+                        color: "red",
+                        fill: false,
+                        weight: 2
+                    };
+                }
+            }).addTo(map);
+        });
+
+        var yahadMarkers = new L.FeatureGroup();
+        var siteMarkers = new L.FeatureGroup();
+        map.addLayer(siteMarkers);
+
+        map.on('zoomend', function () {
+            if (map.getZoom() < 8) {
+                map.removeLayer(yahadMarkers);
+            }
+            else {
+                map.addLayer(yahadMarkers);
+            }
+        });
+
+        var yahadIcon = L.divIcon({
+            className: 'yahad-icon',
+            iconSize: [6, 6]
+        });
+
+        var siteIcon = L.divIcon({
+            className: 'site-icon'
+        });
+
+        request("https://docs.google.com/spreadsheets/d/e/2PACX-1vRDY5XcGF4HfWa_1xkVeUE96hPHUSl0155ZIqkWr3pxOjPrHK95kVrRrXYib5Ohr5vlZDGIIM-OtPko/pub?gid=493372169&single=true&output=csv", function (data) {
+            var csv = Papa.parse(data, {
+                header: true
+            });
+            console.log(csv);
+
+            asyncForEach(csv.data.sort(sortingBy("Year")), function (element, callback) {
+                if (element["Co-ordinates"]) {
+                    element._latLon = element["Co-ordinates"].split(",").map(parseFloat);
+
+                    var node = document.createElement("div")
+                    format(element, node)
+
+                    var site = L.marker(element._latLon, {
+                        icon: siteIcon
+                    }).addTo(siteMarkers).bindPopup(node, {
+                        closeButton: false
+                    }).bindTooltip(element["Location Name"] || "No Name").data = element;
+                }
+
+                setTimeout(callback, 10)
+            });
+
+            // var mapped = csv.data.reduce(function(accu, elem) {
+            //     accu[]
+            // }, {})
+        })
+
+        request("http://cors-anywhere.herokuapp.com/https://yahadmap.org/en/", function (data) {
+            JSON.parse(data).forEach(function (element) {
+                if (element.lat && element.lng) {
+                    L.marker([element.lat, element.lng], {
+                        icon: yahadIcon
+                    }).on("click", function (e) {
+                        if (element.u) {
+                            window.open("https://yahadmap.org/" + element.u)
+                        }
+                    }).bindTooltip(element.t || "Error").addTo(yahadMarkers);
+                }
+            })
+        }, "search=map&r=1&t=all&q_village=&q_pays=&q=");
+
+        document.getElementById("year-range").oninput = function (e) {
+            var value = this.value;
+
+            siteMarkers.eachLayer(function (marker) {
+                if (marker.data.Year < parseInt(value)) {
+                    marker.getElement().style.display = "block"
+                } else {
+                    marker.getElement().style.display = "none"
+                }
+            })
+        }
+
+    </script>
+</body>
+
+</html>
