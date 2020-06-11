@@ -5,17 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@latest/dist/leaflet.css"
         integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
         crossorigin="" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@latest/dist/MarkerCluster.css">
     </link>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@latest/dist/MarkerCluster.Default.css">
     </link>
-    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="https://unpkg.com/papaparse@5.2.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/leaflet@latest/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@latest/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
     <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <script src="leaflet.shpfile.js"></script>
 </head>
 
 <body>
@@ -78,6 +79,10 @@
             border: 1px solid black;
         }
 
+        .label {
+            color: white;
+        }
+        
         #year-range {
             margin: 0;
             border-radius: 0;
@@ -173,17 +178,36 @@
             accessToken: 'pk.eyJ1IjoibGV3YTE1MCIsImEiOiJja2F4b3A5bXQwODh6MnlvNWh1NndqZGpxIn0.ZjXRzN_TEwYa4c2Ixf6t5g'
         }).addTo(map);
 
-        request("germany_1942.geojson", function (data) {
-            L.geoJSON(JSON.parse(data), {
-                style: function (feature) {
-                    return {
-                        color: "red",
-                        fill: false,
-                        weight: 2
-                    };
+        L.shapefile("January_31_1943.zip", {
+            style: function (feature) {
+                console.log(feature.properties.Foreign_Po);
+
+                var fill = feature.properties.Foreign_Po;
+                
+                if (fill.toLowerCase().includes("axis")) {
+                    fill = "red"
+                } else if (fill.toLowerCase().includes("occupied")) {
+                    fill = "yellow"
+                } else if (fill.toLowerCase().includes("protectorate")) {
+                    fill = "red"
+                } else if (fill.toLowerCase().includes("allies")) {
+                    fill = "blue"
+                } else {
+                    fill = false;
                 }
-            }).addTo(map);
-        });
+
+                return {
+                    color: fill,
+                    opacity: 0.5,
+                    fill: !!fill,
+                    fillOpacity: 0.1,
+                    weight: 1
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(feature.properties.Name + " - " + feature.properties.Foreign_Po, {closeButton: false});
+            }
+        }).addTo(map);
 
         var yahadMarkers = new L.FeatureGroup();
         var siteMarkers = new L.FeatureGroup();
