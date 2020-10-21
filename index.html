@@ -5,9 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@latest/dist/leaflet.css"
-        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-        crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@latest/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@latest/dist/MarkerCluster.css">
     </link>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@latest/dist/MarkerCluster.Default.css">
@@ -180,8 +178,6 @@
 
         L.shapefile("January_31_1943.zip", {
             style: function (feature) {
-                console.log(feature.properties.Foreign_Po);
-
                 var fill = feature.properties.Foreign_Po;
                 
                 if (fill.toLowerCase().includes("axis")) {
