@@ -227,7 +227,7 @@
             className: 'site-icon'
         });
 
-        request("https://docs.google.com/spreadsheets/d/e/2PACX-1vRDY5XcGF4HfWa_1xkVeUE96hPHUSl0155ZIqkWr3pxOjPrHK95kVrRrXYib5Ohr5vlZDGIIM-OtPko/pub?gid=493372169&single=true&output=csv", function (data) {
+        request("https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vRDY5XcGF4HfWa_1xkVeUE96hPHUSl0155ZIqkWr3pxOjPrHK95kVrRrXYib5Ohr5vlZDGIIM-OtPko/pub?output=csv", function (data) {
             var csv = Papa.parse(data, {
                 header: true
             });
