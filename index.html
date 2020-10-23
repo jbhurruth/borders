@@ -176,14 +176,14 @@
             accessToken: 'pk.eyJ1IjoibGV3YTE1MCIsImEiOiJja2F4b3A5bXQwODh6MnlvNWh1NndqZGpxIn0.ZjXRzN_TEwYa4c2Ixf6t5g'
         }).addTo(map);
 
-        L.shapefile("May_31_1942.zip", {
+        L.shapefile("January_31_1943.zip", {
             style: function (feature) {
                 var fill = feature.properties.Foreign_Po;
                 
                 if (fill.toLowerCase().includes("axis")) {
                     fill = "red"
                 } else if (fill.toLowerCase().includes("occupied")) {
-                    fill = "yellow"
+                    fill = "red"
                 } else if (fill.toLowerCase().includes("protectorate")) {
                     fill = "red"
                 } else if (fill.toLowerCase().includes("allies")) {
