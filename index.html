@@ -96,23 +96,14 @@
             pointer-events: none;
             font-size: 3em;
         }
+        h3 {
+            text-align: center;
+        }
     </style>
 
     <h1 id="year">2020</h1>
     <div class="slide-container">
         <input type="range" min="1940" max="2020" value="2020" class="slider" id="year-range" list="tickmarks">
-
-        <datalist id="tickmarks">
-            <option value="1940" label="1940"></option>
-            <option value="1950" label="1950"></option>
-            <option value="1960" label="1960"></option>
-            <option value="1970" label="1970"></option>
-            <option value="1980" label="1980"></option>
-            <option value="1990" label="1990"></option>
-            <option value="2000" label="2000"></option>
-            <option value="2010" label="2010"></option>
-            <option value="2020" label="2020"></option>
-        </datalist>
     </div>
     <div id="mapid"></div>
 
@@ -141,15 +132,30 @@
 
         function format(obj, node) {
             return render(html`
-                <table>
-                    ${Object.keys(obj).filter(e => e[0] !== "_").map(e => html`
-                        <tr>
-                            <td>${e}</td>
-                            <td>${obj[e]}</td>
-                        </tr>
-                        `)}
-                </table>
+                <h3>${obj["Location Name"]}</h3>
+                <div style="display: inline-flex;">
+                    <img src="images/${obj["Identifier"]}.jpg" width="150" style="padding-right: 1em">
+                    <div>
+                        <p>${obj["Author"]}</p>
+                        <a onclick="filterByText('${obj["Title"]}')">${obj["Title"]}</a>
+                        <p>${obj["Year"]}</p>
+                    </div>
+                </div>
             `, node)
+        }
+
+        function filterByText(title) {
+
+        }
+
+        var siteFilters = {
+            text: null,
+            year: 2020,
+            setting: null
+        }
+
+        function drawSites() {
+
         }
 
         function asyncForEach(array, func, callback) {
@@ -171,7 +177,7 @@
             id: 'mapbox/dark-v10',
             tileSize: 512,
             zoomOffset: -1,
-            minZoom: 5,
+            minZoom: 4,
             maxZoom: 10,
             accessToken: 'pk.eyJ1IjoibGV3YTE1MCIsImEiOiJja2F4b3A5bXQwODh6MnlvNWh1NndqZGpxIn0.ZjXRzN_TEwYa4c2Ixf6t5g'
         }).addTo(map);
@@ -224,10 +230,11 @@
         });
 
         var siteIcon = L.divIcon({
-            className: 'site-icon'
+            className: 'site-icon',
+            iconSize: [10, 10]
         });
 
-        request("https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/e/2PACX-1vRDY5XcGF4HfWa_1xkVeUE96hPHUSl0155ZIqkWr3pxOjPrHK95kVrRrXYib5Ohr5vlZDGIIM-OtPko/pub?output=csv", function (data) {
+        request("https://docs.google.com/spreadsheets/d/e/2PACX-1vRDY5XcGF4HfWa_1xkVeUE96hPHUSl0155ZIqkWr3pxOjPrHK95kVrRrXYib5Ohr5vlZDGIIM-OtPko/pub?gid=493372169&single=true&output=csv", function (data) {
             var csv = Papa.parse(data, {
                 header: true
             });
@@ -275,7 +282,7 @@
             document.getElementById("year").innerText = value;
 
             siteMarkers.eachLayer(function (marker) {
-                if (marker.data.Year < parseInt(value)) {
+                if (marker.data.Year <= parseInt(value)) {
                     marker.getElement().style.display = "block"
                 } else {
                     marker.getElement().style.display = "none"
